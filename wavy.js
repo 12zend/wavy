@@ -103,20 +103,16 @@
   }
 
   const bilinearPixel = (source, width, height, x, y, output, outputIndex) => {
-    if (x < 0 || y < 0 || x > width - 1 || y > height - 1) {
-      output[outputIndex] = 0;
-      output[outputIndex + 1] = 0;
-      output[outputIndex + 2] = 0;
-      output[outputIndex + 3] = 0;
-      return;
-    }
-
-    const x0 = Math.floor(x);
-    const y0 = Math.floor(y);
+    // Clamp samples to the pen texture's edge. Returning transparency for
+    // out-of-range samples exposed the stage background as a white border.
+    const clampedX = clamp(x, 0, width - 1);
+    const clampedY = clamp(y, 0, height - 1);
+    const x0 = Math.floor(clampedX);
+    const y0 = Math.floor(clampedY);
     const x1 = Math.min(x0 + 1, width - 1);
     const y1 = Math.min(y0 + 1, height - 1);
-    const fractionX = x - x0;
-    const fractionY = y - y0;
+    const fractionX = clampedX - x0;
+    const fractionY = clampedY - y0;
     const topWeight = 1 - fractionY;
     const bottomWeight = fractionY;
     const weight00 = (1 - fractionX) * topWeight;
