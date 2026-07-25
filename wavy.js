@@ -157,9 +157,9 @@
         color3: '#424FB0',
         blocks: [
           {
-            opcode: 'setNoise',
+            opcode: 'wavy',
             blockType: Scratch.BlockType.COMMAND,
-            text: 'set noise scale [SCALE] strength [STRENGTH] offset x [OFFSET_X] y [OFFSET_Y] seed [SEED]',
+            text: 'wavy scale [SCALE] strength [STRENGTH] offset x [OFFSET_X] y [OFFSET_Y] seed [SEED]',
             arguments: {
               SCALE: {
                 type: Scratch.ArgumentType.NUMBER,
@@ -182,28 +182,38 @@
                 defaultValue: '0'
               }
             }
-          },
-          {
-            opcode: 'wavy',
-            blockType: Scratch.BlockType.COMMAND,
-            text: 'wavy'
           }
         ]
       };
     }
 
-    setNoise (args) {
-      const scale = Math.abs(Cast.toNumber(args.SCALE));
-      const strength = Cast.toNumber(args.STRENGTH);
-      const offsetX = Cast.toNumber(args.OFFSET_X);
-      const offsetY = Cast.toNumber(args.OFFSET_Y);
+    configureNoise (args = {}) {
+      const scale = Math.abs(Cast.toNumber(
+        Object.prototype.hasOwnProperty.call(args, 'SCALE') ? args.SCALE : this.scale
+      ));
+      const strength = Cast.toNumber(
+        Object.prototype.hasOwnProperty.call(args, 'STRENGTH') ? args.STRENGTH : this.strength
+      );
+      const offsetX = Cast.toNumber(
+        Object.prototype.hasOwnProperty.call(args, 'OFFSET_X') ? args.OFFSET_X : this.offsetX
+      );
+      const offsetY = Cast.toNumber(
+        Object.prototype.hasOwnProperty.call(args, 'OFFSET_Y') ? args.OFFSET_Y : this.offsetY
+      );
       this.scale = Number.isFinite(scale) ? Math.max(0.0001, scale) : 0.0001;
       this.strength = Number.isFinite(strength) ? strength : 0;
       this.offsetX = Number.isFinite(offsetX) ? offsetX : 0;
       this.offsetY = Number.isFinite(offsetY) ? offsetY : 0;
-      this.seed = Cast.toString(args.SEED);
+      this.seed = Cast.toString(
+        Object.prototype.hasOwnProperty.call(args, 'SEED') ? args.SEED : this.seed
+      );
       this.noiseX = new PerlinNoise(this.seed);
       this.noiseY = new PerlinNoise(`${this.seed}\u0000y`);
+    }
+
+    // Kept for projects saved with the previous two-block version.
+    setNoise (args) {
+      this.configureNoise(args);
     }
 
     getPenSkin () {
@@ -214,8 +224,9 @@
       return renderer._allSkins[renderer._penSkinId] || null;
     }
 
-    wavy () {
+    wavy (args) {
       try {
+        this.configureNoise(args);
         this.applyWavy();
       } catch (error) {
         // Unsandboxed extension blocks must not let errors escape into the VM.
